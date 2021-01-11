@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class BookController extends Controller
 {
@@ -15,10 +16,9 @@ class BookController extends Controller
         $values = Book::orderby('id','desc')->paginate(3);     // $values = Book::get(); order عشان يعرض اخلر حاجه
         return view('bookes.index',compact('values'));   
     }
-    public function show($id)
+    public function show(Book $book)
      {
-        $value= book::findorfail($id);       // $value= de varibal shayell elresult ### findorfail لو مدخلتش الاي دي صح يجيب ايرور 404
-    return view('bookes.show', compact('value'));
+    return view('bookes.show', compact('book'));
     }        
     
     public function create()
@@ -27,32 +27,54 @@ class BookController extends Controller
     }
 
     public function store (Request $value) //$value دا ابوجكت بيشيل الداتا 
-    {                                    // request دا لارافيل  titile  عمود داتا بيز
+    {          
+                                  // request دا لارافيل  titile  عمود داتا بيز
+       $value->validate([ 
+           'titlename' => 'Required |string|max:50',   
+           'descname' => 'Required|string',
+           'img' => 'image|mimes:jpg,png',
+           ]);         // عشان اقوله لازم تدخل استرينج واكبر حاجه 50 و
+            // move
+            $img=$value->file('img');
+            $ext=$img->getClientOriginalExtension();
+            $name="book-". uniqid().".$ext";
+            $img->move(public_path('uplode/book') , $name);
+
         Book::create([
             'title'=>$value->titlename,
             'desc'=>$value->descname,
+            'img'=>$name,
         ]);
 
       return redirect (route('books.index'));
     }
     
-    public function edit ($id)
+    public function edit (Book $book)
     {
-        $value =Book::findorfail($id);
-        return view('bookes.edit' , compact('value'));
+        return view('bookes.edit' , compact('book'));
     }
 
-    public function update(request $value ,$id)
+    public function update(request $value , $book)
     {
-        Book::findorfail($id)->update ([
+        $value->validate([ 
+            'titlename' => 'Required |string|max:50',   
+            'descname' => 'Required|string',
+            'img' => 'nullable|image|mimes:jpg,png',
+
+            ]);        
+        Book::findorfail($book)->update ([
             'title'=>$value->titlename,
             'desc'=>$value->descname
         ]);
-        return redirect(route('books.index',$id));
+        return redirect(route('books.index',$book));
     }
-    public function delete ($id)
+    public function delete (Book $book)
     {
-        Book::findorfail($id)->delete();
+        if($book->img !== null)          // لو مسحت الصوره تتمسح من الفولدر او غيرتها تتبدل
+        {
+                    unlink(public_path('uplode/book/').$book->img);
+        }
+        $book->delete();              // amr eldelete
         return redirect(route('books.index'));
     }
 }

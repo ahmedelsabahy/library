@@ -5,7 +5,9 @@
 @endsection
 
 @section('body')
-<form method="POST" action="{{ route('books.store') }}">
+@include('incloud.error')
+
+<form method="POST" action="{{ route('books.store') }}" enctype="multipart/form-data">
   @csrf
 <div>
     <label for="exampleFormControlInput1" class="form-label">TITLE BOOKS</label>
@@ -14,11 +16,16 @@
   <div>
     <label for="exampleFormControlTextarea1" class="form-label">DESCRIPTION</label>
     <textarea class="form-control" name="descname" rows="3"></textarea>
+  </div> </br>
+  
+  <div class="form-group">
+    <label for="exampleFormControlFile1">Example file input</label>
+    <input type="file" class="form-control-file" name="img">
   </div>
   <div class="col-auto">
     <button type="submit" class="btn btn-primary mb-3">Confirm create</button> </br>
     <a class="btn btn-success" href="{{ route('books.index') }}"> back </a>
   </div>
-</form>
+  
 
 @endsection
