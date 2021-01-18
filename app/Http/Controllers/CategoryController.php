@@ -25,9 +25,8 @@ class CategoryController extends Controller
         return view('categories.create');
     }
 
-    public function store (Request $value) //$value دا ابوجكت بيشيل الداتا 
+    public function store (Request $value) 
     {          
-                                  // request دا لارافيل  titile  عمود داتا بيز
        $value->validate([ 
            'cname' => 'Required |string|max:50',   
            ]);     

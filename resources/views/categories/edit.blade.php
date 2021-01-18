@@ -1,4 +1,4 @@
-@extends('bookes.layout')
+@extends('incloud.layout')
 
 @section('title')
     creat book

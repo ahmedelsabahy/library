@@ -9,4 +9,12 @@ class Category extends Model
 {
     protected $fillable=['name'];
     
+public function books()
+{
+    return $this->belongsToMany('App\Models\Book');
 }
+
+
+
+}
+

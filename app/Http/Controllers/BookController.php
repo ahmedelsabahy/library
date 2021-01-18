@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use App\Models\Category;
 use Symfony\Contracts\Service\Attribute\Required;
 
 class BookController extends Controller
@@ -23,56 +24,80 @@ class BookController extends Controller
     
     public function create()
     {
-        return view('bookes.create');
+        $categories= Category::select('id','name')->get();
+        return view('bookes.create', compact('categories')
+       );
+        
     }
-
-    public function store (Request $value) //$value دا ابوجكت بيشيل الداتا 
+    //store
+    public function store (Request $value) 
     {          
-                                  // request دا لارافيل  titile  عمود داتا بيز
+                            //validation     
        $value->validate([ 
            'titlename' => 'Required |string|max:50',   
            'descname' => 'Required|string',
            'img' => 'image|mimes:jpg,png',
-           ]);         // عشان اقوله لازم تدخل استرينج واكبر حاجه 50 و
+         'categoryids' => 'Required',
+           'categoryids.*' => 'exists:categories,id',
+           ]);     
             // move
             $img=$value->file('img');
             $ext=$img->getClientOriginalExtension();
             $name="book-". uniqid().".$ext";
             $img->move(public_path('uplode/book') , $name);
 
-        Book::create([
+        $book=Book::create([
             'title'=>$value->titlename,
             'desc'=>$value->descname,
             'img'=>$name,
         ]);
+        $book->categories()->sync($value->categoryids); // to store a update change id
 
       return redirect (route('books.index'));
+
     }
     
     public function edit (Book $book)
     {
         return view('bookes.edit' , compact('book'));
     }
-
-    public function update(request $value , $book)
-    {
+    //update
+    public function update(request $value ,Book $book)
+ {
         $value->validate([ 
             'titlename' => 'Required |string|max:50',   
             'descname' => 'Required|string',
             'img' => 'nullable|image|mimes:jpg,png',
 
             ]);        
-        Book::findorfail($book)->update ([
+       $name=$book->img;
+     if($value->hasFile('img'))
+    {
+           if ($name !== null)        
+       {
+                   unlink(public_path('uplode/book/'). $name);
+       }
+       $img=$value->file('img');
+       $ext=$img->getClientOriginalExtension();
+       $name="book-". uniqid().".$ext";
+       $img->move(public_path('uplode/book') , $name);
+
+     }
+      $book->update ([
             'title'=>$value->titlename,
-            'desc'=>$value->descname
+            'desc'=>$value->descname,
+            'img'=>$name
         ]);
         return redirect(route('books.index',$book));
-    }
+ }
+  //delete
+
     public function delete (Book $book)
     {
+
         if($book->img !== null)          // لو مسحت الصوره تتمسح من الفولدر او غيرتها تتبدل
         {
-                    unlink(public_path('uplode/book/').$book->img);
+                    unlink(public_path('uplode/book/'). $book->img);
         }
         $book->delete();              // amr eldelete
         return redirect(route('books.index'));
